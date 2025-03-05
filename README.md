@@ -8,6 +8,9 @@
 
 This project is a robust and scalable end-to-end UI automation framework built with Playwright and TypeScript. It follows modern design patterns and best practices (such as the Page Object Model and Fixtures) to ensure your tests are maintainable, reusable, and easy to understand.
 
+Preparation for the approach:
+[[Miro Board]](https://miro.com/app/board/uXjVMKPYtB0=/?share_link_id=479794801380)
+
 ## Table of Contents
 
 - [Project Overview](#project-overview)
