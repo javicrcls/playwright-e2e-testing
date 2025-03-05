@@ -1,6 +1,6 @@
 # 🎭 Playwright E2E Testing Framework
 
-[![CircleCI](https://img.shields.io/badge/CircleCI-passing-brightgreen)](https://app.circleci.com/pipelines/github/javicrcls/affirm-challenge)
+![CircleCI](https://img.shields.io/badge/CircleCI-passing-brightgreen)
 [![Playwright](https://img.shields.io/badge/tested%20with-playwright-45ba4b?logo=playwright&logoColor=white)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.3.5-blue)](https://www.typescriptlang.org/)
 [![Slack](https://img.shields.io/badge/Slack-reporting-4A154B?logo=slack&logoColor=white)](https://slack.com)
