@@ -125,7 +125,7 @@ The project integrates seamlessly with CircleCI:
      npm run test:smoke     # Run smoke tests only
      npm run test:regression # Run regression tests only
      npm run test:dashboard  # Run dashboard-related tests only
-     npm run test:failset # Run this to check how failures are reported
+     npm run test:navigation # Run this to check how failures are reported
      ```
 
 3. **View Test Report:**

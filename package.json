@@ -12,7 +12,7 @@
     "test:health": "playwright test --grep @health --project=chromium",
     "test:smoke": "playwright test --grep @smoke --project=chromium",
     "test:regression": "playwright test --grep @regression --project=chromium",
-    "test:failset": "playwright test --grep @smoke|@fail --project=chromium",
+    "test:navigation": "playwright test --grep @navigation --project=chromium",
     "test:admin": "playwright test --grep @admin --project=chromium",
     "test:fail": "playwright test --grep @fail --project=chromium",
     "test:mobile": "playwright test --grep @mobile --project=mobile-chrome",

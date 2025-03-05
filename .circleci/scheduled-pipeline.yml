@@ -7,7 +7,7 @@ orbs:
 parameters:
   test-set:
     type: enum
-    enum: ["smoke", "regression", "health", "fail", "failset"]
+    enum: ["smoke", "regression", "health", "fail", "navigation"]
     default: "regression"
     description: "Test set to run (smoke, regression, or health)"
   
