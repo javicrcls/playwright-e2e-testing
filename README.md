@@ -79,10 +79,20 @@ The project integrates seamlessly with CircleCI:
 - **Jobs:**  
   - The main test job (`test`) is defined in `.circleci/config.yml` and uses a Playwright Docker image.  
   - A build job (`build-and-push`) builds the Docker image, pushes it, and sends notifications.
+
+    <img width="681" alt="Screenshot 2025-03-05 at 16 47 41" src="https://github.com/user-attachments/assets/c9837648-afca-4a3e-befb-7f516c8c1444" />
+
 - **On-Demand Test Sets:**  
   - A parameterized pipeline (`scheduled-pipeline.yml`) allows running different test sets (such as smoke, regression, and health) on-demand with customizable parameters like test-set and base URL.
+    
+ ![Screenshot 2025-03-05 at 16 48 26](https://github.com/user-attachments/assets/0c96a102-7e46-4c67-ba77-5947ad3058b1)
+
+    
 - **Artifacts & Reporting:**  
   - Test results and Playwright reports are stored as artifacts and can be reviewed after each run.
+    ![Screenshot 2025-03-05 at 16 50 14](https://github.com/user-attachments/assets/f5d642ac-6ab9-4b43-9910-67481e9593ef)
+
+    ![Screenshot 2025-03-05 at 16 49 10](https://github.com/user-attachments/assets/8f3f1708-2565-482a-b843-16f132914693)
 
 ## Slack Integration
 
@@ -90,6 +100,11 @@ The project integrates seamlessly with CircleCI:
   The configuration uses the `circleci/slack` orb to instantly notify the team on both test failures and successful builds.
 - **Customizable Messages:**  
   Slack notifications include detailed build information, test sets executed, branch name, and quick links to build details and generated reports.
+
+<img width="303" alt="Screenshot 2025-03-05 at 16 45 36" src="https://github.com/user-attachments/assets/972cecb0-8719-4725-afb2-83f4fed007e8" />
+
+<img width="325" alt="Screenshot 2025-03-05 at 16 46 39" src="https://github.com/user-attachments/assets/6211b990-bae3-49c1-92d7-4eb6d04b55b6" />
+
 
 ## Running the Project
 
