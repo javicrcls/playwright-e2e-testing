@@ -1,0 +1,10 @@
+node_modules
+playwright-report/*
+!playwright-report/.gitkeep
+test-results/*
+!test-results/.gitkeep
+screenshots/*
+!screenshots/.gitkeep
+.vscode/*
+affirm-challenge.code-workspace
+.auth/*

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for formatting only
+npx lint-staged
+
+# Always run health tests - mandatory for every commit
+echo "Running health tests..."
+npm run test:health

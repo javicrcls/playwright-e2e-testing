@@ -1,0 +1,206 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.2.0
+  slack: circleci/slack@4.12.5
+
+parameters:
+  test-set:
+    type: enum
+    enum: ["smoke", "regression", "health", "fail", "failset"]
+    default: "regression"
+    description: "Test set to run (smoke, regression, or health)"
+  
+  custom-base-url:
+    type: string
+    default: ""
+    description: "Optional custom base URL (e.g., https://opensource-demo.orangehrmlive.com/)"
+
+jobs:
+  run-tests:
+    docker:
+      - image: cimg/base:2023.03
+    steps:
+      - setup_remote_docker
+      - run:
+          name: Pull latest Docker image
+          command: docker pull javicarcelessarasanchez/playwright-tests:latest
+
+      - run:
+          name: Run << pipeline.parameters.test-set >> test set
+          command: |
+            # Create directories for artifacts
+            mkdir -p playwright-report
+            mkdir -p test-results
+            mkdir -p screenshots
+
+            # Determine BASE_URL based on parameter or environment variable
+            if [ -n "<< pipeline.parameters.custom-base-url >>" ]; then
+              FINAL_BASE_URL="<< pipeline.parameters.custom-base-url >>"
+            else
+              FINAL_BASE_URL="${BASE_URL}"
+            fi
+            
+            echo "Running test set: << pipeline.parameters.test-set >>"
+            echo "Using BASE_URL: $FINAL_BASE_URL"
+            
+            # Run tests inside a Docker container and capture the exit code
+            docker run --name test-container \
+              -e BASE_URL="$FINAL_BASE_URL" \
+              -e USER_EMAIL="${USER_EMAIL}" \
+              -e USER_PASSWORD="${USER_PASSWORD}" \
+              -e ADMIN_USERNAME="${ADMIN_USERNAME}" \
+              -e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
+              javicarcelessarasanchez/playwright-tests:latest \
+              npm run test:<< pipeline.parameters.test-set >>
+            
+            echo $? > test_exit_code.txt
+          continue_on_error: true
+
+      - run:
+          name: Copy artifacts and cleanup
+          when: always
+          command: |
+            echo "Copying test artifacts from container..."
+            docker cp test-container:/app/playwright-report/. ./playwright-report/ || true
+            docker cp test-container:/app/test-results/. ./test-results/ || true
+            
+            # Adjust permissions to ensure CircleCI can access them
+            chmod -R 777 ./playwright-report || true
+            chmod -R 777 ./test-results || true
+            
+            docker rm test-container || true
+
+      - run:
+          name: List artifact directories
+          when: always
+          command: |
+            echo "Contents of playwright-report directory:"
+            ls -la ./playwright-report/ || echo "No playwright-report directory found"
+            echo "Contents of test-results directory:"
+            ls -la ./test-results/ || echo "No test-results directory found"
+
+      - run:
+          name: Create fallback reports if missing
+          when: always
+          command: |
+            if [ ! -f "./playwright-report/index.html" ]; then
+              echo "Creating fallback report..."
+              mkdir -p ./playwright-report
+              echo "<html><head><title>Test Report</title></head><body><h1>No report generated</h1><p>Check logs for details</p></body></html>" > ./playwright-report/index.html
+            fi
+            if [ ! -f "./test-results/junit.xml" ]; then
+              echo "Creating fallback test results..."
+              mkdir -p ./test-results
+              echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="Fallback" tests="1" failures="1"><testcase name="fallback"><failure message="No test results generated"/></testcase></testsuite></testsuites>' > ./test-results/junit.xml
+            fi
+
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: playwright-report
+          destination: playwright-report
+
+      - slack/notify:
+          event: fail
+          channel: ${SLACK_ALERTS_CHANNEL}
+          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Test execution - Failed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Test set*: << pipeline.parameters.test-set >>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment*: ${FINAL_BASE_URL:-Default}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${CIRCLE_BUILD_URL}|Build details> | <https://output.circle-artifacts.com/output/job/${CIRCLE_WORKFLOW_JOB_ID}/artifacts/0/playwright-report/index.html|Test report>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Oncall: @bender-team"
+                  }
+                }
+              ]
+            }
+
+      - slack/notify:
+          event: pass
+          channel: ${SLACK_ALERTS_CHANNEL}
+          template: success_tagged_deploy_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ Test execution - Passed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Test set*: << pipeline.parameters.test-set >>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment*: ${FINAL_BASE_URL:-Default}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - run:
+          name: Fail build if tests failed
+          when: always
+          command: |
+            TEST_EXIT_CODE=$(cat test_exit_code.txt)
+            if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+              echo "Tests failed with exit code $TEST_EXIT_CODE"
+              exit $TEST_EXIT_CODE
+            else
+              echo "Tests passed"
+            fi
+
+      - run:
+          name: Debug Docker container
+          when: always
+          command: |
+            echo "Debugging Docker container..."
+            docker run --name debug-container javicarcelessarasanchez/playwright-tests:latest ls -la /app/playwright-report /app/test-results || true
+            docker rm debug-container || true
+
+workflows:
+  parameterized-tests:
+    jobs:
+      - run-tests:
+          context: 
+            - slack-secrets
+            - slack-alerts

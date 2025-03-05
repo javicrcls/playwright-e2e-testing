@@ -1,0 +1,202 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+  docker: circleci/docker@2.2.0
+  slack: circleci/slack@4.12.5
+
+jobs:
+  test:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.50.1-noble
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Create artifact directories
+          command: |
+            mkdir -p playwright-report
+            mkdir -p test-results
+            mkdir -p screenshots
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Install Playwright browsers
+          command: npx playwright install --with-deps
+      - run:
+          name: Run Playwright tests
+          command: |
+            # Run tests without overriding reporter settings
+            npm run test:health
+          no_output_timeout: 30m
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: playwright-report
+          destination: playwright-report
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Pre Build Test Execution - Failed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Test set*: health"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch*: ${CIRCLE_BRANCH}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${CIRCLE_BUILD_URL}|Build details> | <https://output.circle-artifacts.com/output/job/${CIRCLE_WORKFLOW_JOB_ID}/artifacts/0/playwright-report/index.html|Test report>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Oncall: @infra-team"
+                  }
+                }
+              ]
+            }
+
+  build-and-push:
+    docker:
+      - image: cimg/base:2023.03
+    steps:
+      - checkout
+      - setup_remote_docker
+      - docker/check:
+          docker-username: DOCKERHUB_USERNAME
+          docker-password: DOCKERHUB_PASSWORD
+      - docker/build:
+          image: javicarcelessarasanchez/playwright-tests
+          tag: latest
+      - docker/push:
+          image: javicarcelessarasanchez/playwright-tests
+          tag: latest
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Framework Build Failed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch*: ${CIRCLE_BRANCH}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${CIRCLE_BUILD_URL}|Build details>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Oncall: @infra-team"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚀 New Testing Framework Released",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Image*: playwright-tests:latest"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch*: ${CIRCLE_BRANCH}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🐳 E2E Testing Framework latest version is ready to use."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "```docker pull playwright-tests:latest```"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${CIRCLE_BUILD_URL}|Build details>"
+                  }
+                }
+              ]
+            }
+
+workflows:
+  version: 2
+  test-and-build:
+    jobs:
+      - test:
+          filters:
+            branches:
+              only: 
+                - main
+                - /feature\/.*/
+                - /bugfix\/.*/
+      - build-and-push:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main

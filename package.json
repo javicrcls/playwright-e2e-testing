@@ -1,0 +1,59 @@
+{
+  "name": "playwright-ui-framework",
+  "version": "1.0.0",
+  "description": "UI Automation Framework with Playwright",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test --project=chromium",
+    "test:headed": "playwright test --headed --project=chromium",
+    "test:debug": "playwright test --debug --project=chromium",
+    "test:ui": "playwright test --ui",
+    "test:trace": "playwright test --trace on --project=chromium",
+    "test:health": "playwright test --grep @health --project=chromium",
+    "test:smoke": "playwright test --grep @smoke --project=chromium",
+    "test:regression": "playwright test --grep @regression --project=chromium",
+    "test:failset": "playwright test --grep @smoke|@fail --project=chromium",
+    "test:admin": "playwright test --grep @admin --project=chromium",
+    "test:fail": "playwright test --grep @fail --project=chromium",
+    "test:mobile": "playwright test --grep @mobile --project=mobile-chrome",
+    "test:storaged": "playwright test --headed --grep @storaged --project=authenticated-chrome",
+    "test:browsercompatibility": "playwright test --grep @browsercompatibility --project=browsercompatibility",
+    "codegen": "playwright codegen",
+    "report": "playwright show-report",
+    "docker:build": "docker build -t javicarcelessarasanchez/playwright-tests:latest .",
+    "docker:push": "docker push javicarcelessarasanchez/playwright-tests:latest",
+    "docker:run": "docker-compose up",
+    "docker:test": "docker-compose up --build",
+    "docker:test:smoke": "docker-compose run --rm playwright npx playwright test --grep @smoke",
+    "docker:test:admin": "docker-compose run --rm playwright npx playwright test --grep @admin",
+    "docker:test:regression": "docker-compose run --rm playwright npx playwright test --grep @regression",
+    "docker:test:health": "docker-compose run --rm playwright npx playwright test --grep @health",
+    "format": "npx prettier --write **/*.ts",
+    "format:check": "npx prettier --check **/*.ts",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "testing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.5",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.7.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npx prettier --write"
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.8.1"
+  }
+}
