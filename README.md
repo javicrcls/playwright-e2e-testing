@@ -49,6 +49,7 @@ This project is ideal for showcasing your test automation skills during technica
 
 - **Storage state feature:**  
   - Implemented Playwright's storage state feature to maintain authentication between test runs, improving efficiency and reducing test execution time: (`tests/login/logged.setup.ts` and `tests/home/dashboard-storage-example.spec.ts`)
+  - 
    ```sh
      npm run test:storaged
 
